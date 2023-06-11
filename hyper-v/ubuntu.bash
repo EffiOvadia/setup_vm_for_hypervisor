@@ -10,7 +10,7 @@ deb [arch=$(dpkg --print-architecture)] http://security.ubuntu.com/ubuntu       
 EOF
 
 #@ Install optimized azure/hyper-v ubuntu kernel
-sudo apt update && apt install linux-azure
+sudo apt update && apt install --assume-yes linux-azure
 
 #@ Setup the system to automaticly update 
 sudo apt install --assume-yes unattended-upgrades
