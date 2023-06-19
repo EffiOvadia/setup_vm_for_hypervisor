@@ -9,6 +9,17 @@ deb [arch=$(dpkg --print-architecture)] http://security.ubuntu.com/ubuntu      $
 ### -------------------------------------------------------------------------------------------------------
 EOF
 
+sudo cat > /etc/apt/sources.list.d/ubuntu.sources <<-EOF
+X-Repolib-Name: $(lsb_release -sd) $(lsb_release -sc)
+Enabled: yes
+Types: deb deb-src
+URIs: http://azure.archive.ubuntu.com/ubuntu
+Suites: $(lsb_release -sc) $(lsb_release -sc)-updates $(lsb_release -sc)-backports $(lsb_release -sc)-security
+Components: main restricted universe multiverse
+Architectures: $(dpkg --print-architecture)
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+EOF
+
 #@ Install optimized azure/hyper-v ubuntu kernel
 sudo apt update && apt install --assume-yes linux-azure
 
