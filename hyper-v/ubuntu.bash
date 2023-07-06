@@ -11,7 +11,7 @@ sudo cat > /etc/apt/sources.list.d/ubuntu.sources <<-EOF
 X-Repolib-Name: $(lsb_release -sd) $(lsb_release -sc)
 Enabled: yes
 Types: deb deb-src
-URIs: hhttp://azure.archive.ubuntu.com/ubuntu
+URIs: http://azure.archive.ubuntu.com/ubuntu
 Suites: $(lsb_release -sc) $(lsb_release -sc)-updates $(lsb_release -sc)-backports
 Components: main restricted universe multiverse
 Architectures: $(dpkg --print-architecture)
