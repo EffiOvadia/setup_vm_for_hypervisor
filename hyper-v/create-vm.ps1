@@ -1,35 +1,36 @@
-#Requires -RunAsAdministrator
-#Requires -Modules Hyper-V
+$VMName  = "Debian"
 
-$Name = "Debian"
-$Description = "Debian Stable 
+$Link    = 'https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/'
+$Page    = Invoke-WebRequest -Uri $link
+$ISOname = $Page.Links | Where-Object { $_.href -like "*-netinst.iso" } | Select-Object -First 1 -ExpandProperty href
+$URI     = $Link + $ISOname
 
-- - - - - - - - - - - - - - - - - -
+Invoke-WebRequest -Uri $URI -OutFile $env:userprofile\Downloads\$VMName.iso
 
-Username: user
-Password: P@ssw0rd
+$VM = @{
+  Name = $VMName
+  Generation = 2
+  MemoryStartupBytes = 4GB
+  SwitchName = "Default Switch"
+  NewVHDPath = "$VMName.vhdx"
+  NewVHDSizeBytes = 64GB
+  BootDevice = "VHD"
+  }
 
-- - - - - - - - - - - - - - - - - -
-"
+New-VM @VM
 
-New-VHD -Path ".\$Name.vhdx" -Dynamic -SizeBytes 64GB
-
-New-VM `
-  -Generation 2 `
-  -Name "$Name" `
-  -MemoryStartupBytes 4096MB `
-  -SwitchName "Default Switch" `
-  -VHDPath ".\$Name.vhdx"
-
-Set-VM -Name "$Name" -Notes "$Description"
-Set-VM -Name "$Name" -EnhancedSessionTransportType HVSocket
-Set-VMFirmware -VMName "$Name" -EnableSecureBoot Off
-Set-VMProcessor -VMName "$Name" -Count 2
-Enable-VMIntegrationService -VMName "$Name" -Name "Guest Service Interface"
-Set-VMDvdDrive -VMName DC -ControllerNumber 1 -Path ".\$Name.iso"
-
-
-if ( $(Get-VM –Name ubuntu).state -eq "Off" ) { Start-VM –Name "$Name" }
+Set-VM -Name $VMName -DynamicMemory 
+Set-VM -Name $VMName -ProcessorCount 2 
+Set-VM -Name $VMName -CheckpointType Disabled
+Set-VM -Name $VMName -AutomaticStopAction Shutdown
+Set-VM -Name $VMName -EnhancedSessionTransportType HVSocket
+Enable-VMIntegrationService -VMName $VMName -Name "Guest Service Interface"
+Set-VMFirmware -VMName $VMName -EnableSecureBoot Off
 
 
-#Optimize-VHD -Path ".\$Name.vhdx" -Mode Retrim 
+Add-VMDvdDrive -VMName $VMName -ControllerNumber 0 -Path $env:userprofile\Downloads\$VMName.iso
+Set-VMFirmware -VMName $VMName -BootOrder $(Get-VMDvdDrive -VMName $VMName), $(Get-VMHardDiskDrive -VMName $VMName)
+
+if ( $(Get-VM -Name $VMName).state -eq 'Off' ) { Start-VM -Name $VMName }
+
+#Optimize-VHD -Path ".\$VMName.vhdx" -Mode Retrim 
