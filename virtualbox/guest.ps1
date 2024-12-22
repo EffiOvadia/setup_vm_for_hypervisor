@@ -1,26 +1,26 @@
-### ----------------------------------------------------------------------
-### Set / Delete pagefile
+# ----------------------------------------------------------------------
+## Set / Delete pagefile
 Set-CimInstance -Query "SELECT * FROM Win32_ComputerSystem" -Property @{AutomaticManagedPagefile="False"}
 #Set-CimInstance -Query "SELECT * FROM Win32_PageFileSetting" -Property @{InitialSize=128; MaximumSize=1024}
 (Get-WmiObject -Class Win32_PageFileSetting).Delete() 
-### ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #Restart-Computer -Force
-### ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 Enable-LocalUser -name "Administrator" 
-Set-LocalUser    -Name "Administrator" -Password (ConvertTo-SecureString "Dalya1944--" -AsPlainText -Force)
+Set-LocalUser    -Name "Administrator" -Password (ConvertTo-SecureString "P@ssw0rd" -AsPlainText -Force)
 if ($env:UserName -ne "Administrator" ) { Logoff }
-### ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 if  ( (Get-CimInstance Win32_Operatingsystem | Select-Object -expand Caption) -like "*Windows 10*") 
   { Compact ; Compact /CompactOS:Query ; Compact /CompactOS:always }
-### ----------------------------------------------------------------------
-### Cleanup files
+# ----------------------------------------------------------------------
+## Cleanup files
 DISM.exe /online /Cleanup-Image /AnalyzeComponentStore
 DISM.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
 DISM.exe /online /Cleanup-Image /SPSuperseded
-### ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #Get-ChildItem $env:SystemDrive -Filter *$Get* -hidden | Remove-Item -Recurse -Force | out-null
-### ----------------------------------------------------------------------
-### Clearing CleanMgr.exe automation settings
+# ----------------------------------------------------------------------
+## Clearing CleanMgr.exe automation settings
 Push-Location -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches'
 Get-ItemProperty '.\*' -Name StateFlags0001 -ErrorAction SilentlyContinue | Remove-ItemProperty -Name StateFlags0001 -ErrorAction SilentlyContinue
   $Keys = 
@@ -50,8 +50,8 @@ Get-ItemProperty '.\*' -Name StateFlags0001 -ErrorAction SilentlyContinue | Remo
 Pop-Location
 Start-Process -FilePath CleanMgr.exe -ArgumentList '/sagerun:1' -WindowStyle Hidden -Wait
 Get-Process -Name cleanmgr,dismhost -ErrorAction SilentlyContinue | Wait-Process
-### ----------------------------------------------------------------------
-### Start Optimizing
+# ----------------------------------------------------------------------
+## Start Optimizing
 if  ( (Get-CimInstance Win32_Operatingsystem | Select-Object -expand Caption) -like "*Windows 10*" ) 
       { 
         fsutil behavior set DisableDeleteNotify NTFS 1 
@@ -63,16 +63,16 @@ if  ( (Get-CimInstance Win32_Operatingsystem | Select-Object -expand Caption) -l
       { 
         Start-Process -FilePath Defrag.exe -ArgumentList "/H /U /X /V $env:SYSTEMDRIVE" -NoNewWindow -Wait 
       }
-### ----------------------------------------------------------------------
-### Update SDelete
+# ----------------------------------------------------------------------
+## Update SDelete
 [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
 $URI = "https://download.sysinternals.com/files/SDelete.zip"
 Invoke-WebRequest "$URI" -outfile "$env:temp\SDelete.zip" -passthru -UseBasicParsing | Select-Object -Expand headers
 Expand-Archive -Force -path $env:temp\SDelete.zip -DestinationPath "$env:temp" ; Remove-Item -path $env:temp\SDelete.zip 
 Move-Item -Path "$env:temp\sdelete64.exe" -Destination "$env:WINDIR\system32\sdelete64.exe" -Force
-### Run SDelete
+## Run SDelete
 Start-Process -FilePath SDelete64.exe -ArgumentList "$env:SystemDrive -z -nobanner" -NoNewWindow -Wait
-### ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #Start-Process -FilePath $env:WINDIR\system32\sysprep\Sysprep -ArgumentList "/generalize /oobe /shutdown /mode:vm" 
-### ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 Stop-Computer -Force
